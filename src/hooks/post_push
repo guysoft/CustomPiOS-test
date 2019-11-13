@@ -30,6 +30,7 @@ EOF
 }
 
 
+echo "handeling: ${DOCKER_REPO}|${IMAGE_NAME}|${DOCKER_TAG}"
 echo "Pushing multi-arch manifest $IMAGE_NAME"
 echo "tag: $DOCKER_TAG"
 
@@ -37,7 +38,7 @@ generate_manifest $IMAGE_NAME $IMAGE_NAME
 ./manifest-tool push from-spec manifest-generated.yaml
 
 # If we're building the "devel" branch, then also push it as "latest"
-if [ $DOCKER_TAG == "amd64" ] || [ $DOCKER_TAG == "amd64" ] 
+if [[ "$DOCKER_TAG" == "amd64" ]] || [[ "$DOCKER_TAG" == "amd64" ]]
 then
   echo "Pushing multi-arch manifest $DOCKER_REPO:latest"
   ./manifest-tool push from-spec multi-arch-manifest.yaml
