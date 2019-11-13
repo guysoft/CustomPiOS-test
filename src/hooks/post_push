@@ -10,14 +10,18 @@ chmod +x manifest-tool
 # Parameter 1 is the multi-arch image name, e.g. ckulka/baikal:0.5.1
 # Parameter 2 is the base-image for the variants, e.g. ckulka/baikal:0.5.1-apache
 function generate_manifest {
+  DOCKER_REPO=$1
+  IMAGE_NAME=$2
+  DOCKER_TAG=$3
+  RELEASE_TAG=${DOCKER_TAG%%-*}
   cat > manifest-generated.yaml << EOF
-image: $1
+image: ${IMAGE_NAME}:${RELEASE_TAG}
 manifests:
-  - image: $2-amd64
+  - image: ${IMAGE_NAME}:${RELEASE_TAG}-amd64
     platform:
       architecture: amd64
       os: linux
-  - image: $2-arm32v7
+  - image: ${IMAGE_NAME}:${RELEASE_TAG}-arm32v7
     platform:
       architecture: arm
       os: linux
@@ -27,22 +31,22 @@ EOF
 
 
 echo "Pushing multi-arch manifest $IMAGE_NAME"
-echo $DOCKER_TAG
+echo "tag: $DOCKER_TAG"
 
 generate_manifest $IMAGE_NAME $IMAGE_NAME
 ./manifest-tool push from-spec manifest-generated.yaml
 
 # If we're building the "devel" branch, then also push it as "latest"
-if [ $DOCKER_TAG == "devel" ]
+if [ $DOCKER_TAG == "amd64" ] || [ $DOCKER_TAG == "amd64" ] 
 then
   echo "Pushing multi-arch manifest $DOCKER_REPO:latest"
-  generate_manifest "$DOCKER_REPO:latest" $IMAGE_NAME
-  ./manifest-tool push from-spec manifest-generated.yaml
+  ./manifest-tool push from-spec multi-arch-manifest.yaml
 
-# If we're building, for example, 0.5.1-apache, then also push it as "0.5.1"
+# Handle release
 elif [[ $DOCKER_TAG == *-apache ]]
 then
-  echo "Pushing multi-arch manifest ${IMAGE_NAME/-apache/}"
-  generate_manifest ${IMAGE_NAME/-apache/} $IMAGE_NAME
+  echo "Pushing multi-arch manifest ${DOCKER_TAG%%-*}"
+  echo ${DOCKER_REPO}|${IMAGE_NAME}|${DOCKER_TAG}
+  generate_manifest ${DOCKER_REPO} ${IMAGE_NAME} ${DOCKER_TAG}
   ./manifest-tool push from-spec manifest-generated.yaml
 fi
