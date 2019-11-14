@@ -14,21 +14,35 @@ function generate_manifest {
   IMAGE_NAME=$2
   DOCKER_TAG=$3
   RELEASE_TAG=${DOCKER_TAG%%-*}
+  
+  REPO_NAME=${IMAGE_NAME##*/}
+  REPO_NAME_AND_USER=${IMAGE_NAME%%/${REPO_NAME}*}
+  USER_NAME=${REPO_NAME_AND_USER##*/}
+  
+  NAME=${USER_NAME}/${REPO_NAME}
+
   cat > manifest-generated.yaml << EOF
-image: ${IMAGE_NAME}:${RELEASE_TAG}
+image: ${NAME}:${RELEASE_TAG}
 manifests:
-  - image: ${IMAGE_NAME}:${RELEASE_TAG}-amd64
+  - image: ${NAME}:${RELEASE_TAG}-amd64
     platform:
       architecture: amd64
       os: linux
-  - image: ${IMAGE_NAME}:${RELEASE_TAG}-arm32v7
+  - image: ${NAME}:${RELEASE_TAG}-arm32v7
     platform:
       architecture: arm
       os: linux
       variant: v7
 EOF
+
+  echo "manifest: "
+  cat manifest-generated.yaml
 }
 
+# Example: values
+# ${DOCKER_REPO} = index.docker.io/guysoft/custompios-test
+# ${IMAGE_NAME} = index.docker.io/guysoft/custompios-test:1.2.4-amd64
+# ${DOCKER_TAG} = 1.2.4-amd64
 
 echo "handeling: ${DOCKER_REPO}|${IMAGE_NAME}|${DOCKER_TAG}"
 echo "Pushing multi-arch manifest $IMAGE_NAME"
