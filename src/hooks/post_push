@@ -54,9 +54,8 @@ then
 # Handle release
 else
   echo "handeling: ${DOCKER_REPO}|${IMAGE_NAME}|${DOCKER_TAG}"
-  echo "Pushing multi-arch manifest $IMAGE_NAME"
-  echo "tag: $DOCKER_TAG"
-
-  generate_manifest $IMAGE_NAME $IMAGE_NAME
+  generate_manifest "${DOCKER_REPO}" "${IMAGE_NAME}" "${DOCKER_TAG}"
+  
+  echo "Pushing multi-arch manifest"
   ./manifest-tool push from-spec manifest-generated.yaml
 fi
