@@ -15,7 +15,7 @@ function generate_manifest {
   DOCKER_TAG=$3
   RELEASE_TAG=${DOCKER_TAG%%-*}
   
-  REPO_NAME=${IMAGE_NAME##*/} ; REPO_NAME=${REPO_NAME%%-*}
+  REPO_NAME=${IMAGE_NAME##*/} ; REPO_NAME=${REPO_NAME%%:*}
   REPO_NAME_AND_USER=${IMAGE_NAME%%/${REPO_NAME}*}
   USER_NAME=${REPO_NAME_AND_USER##*/}
   
