@@ -39,6 +39,10 @@ EOF
   cat manifest-generated.yaml
 }
 
+function docker_tag_exists() {
+    curl --silent -f -lSL https://index.docker.io/v1/repositories/$1/tags/$2 > /dev/null
+}
+
 # Example: values
 # ${DOCKER_REPO} = index.docker.io/guysoft/custompios-test
 # ${IMAGE_NAME} = index.docker.io/guysoft/custompios-test:1.2.4-amd64
@@ -56,6 +60,25 @@ else
   echo "handeling: ${DOCKER_REPO}|${IMAGE_NAME}|${DOCKER_TAG}"
   generate_manifest "${DOCKER_REPO}" "${IMAGE_NAME}" "${DOCKER_TAG}"
   
-  echo "Pushing multi-arch manifest"
-  ./manifest-tool push from-spec manifest-generated.yaml
+  RELEASE_TAG=${DOCKER_TAG%%-*}
+  
+  REPO_NAME=${IMAGE_NAME##*/} ; REPO_NAME=${REPO_NAME%%:*}
+  REPO_NAME_AND_USER=${IMAGE_NAME%%/${REPO_NAME}*}
+  USER_NAME=${REPO_NAME_AND_USER##*/}
+  
+  NAME=${USER_NAME}/${REPO_NAME}
+  
+  
+  if docker_tag_exists ${NAME} ${RELEASE_TAG}-amd64 ;then
+    if docker_tag_exists ${NAME} ${RELEASE_TAG}-arm32v7;then
+      echo "Pushing multi-arch manifest"
+      ./manifest-tool push from-spec manifest-generated.yaml
+    else
+      echo "arm32v7 image is missing, not pushing manifst"
+    fi
+    
+  else
+    echo "amd64 image is missing, not pushing manifst"
+  fi
+
 fi
