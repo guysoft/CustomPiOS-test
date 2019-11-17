@@ -10,17 +10,9 @@ chmod +x manifest-tool
 # Parameter 1 is the multi-arch image name, e.g. ckulka/baikal:0.5.1
 # Parameter 2 is the base-image for the variants, e.g. ckulka/baikal:0.5.1-apache
 function generate_manifest {
-  DOCKER_REPO=$1
-  IMAGE_NAME=$2
-  DOCKER_TAG=$3
-  RELEASE_TAG=${DOCKER_TAG%%-*}
+  NAME=$1
+  RELEASE_TAG=$2
   
-  REPO_NAME=${IMAGE_NAME##*/} ; REPO_NAME=${REPO_NAME%%:*}
-  REPO_NAME_AND_USER=${IMAGE_NAME%%/${REPO_NAME}*}
-  USER_NAME=${REPO_NAME_AND_USER##*/}
-  
-  NAME=${USER_NAME}/${REPO_NAME}
-
   cat > manifest-generated.yaml << EOF
 image: ${NAME}:${RELEASE_TAG}
 manifests:
@@ -58,7 +50,6 @@ then
 # Handle release
 else
   echo "handeling: ${DOCKER_REPO}|${IMAGE_NAME}|${DOCKER_TAG}"
-  generate_manifest "${DOCKER_REPO}" "${IMAGE_NAME}" "${DOCKER_TAG}"
   
   RELEASE_TAG=${DOCKER_TAG%%-*}
   
@@ -68,17 +59,22 @@ else
   
   NAME=${USER_NAME}/${REPO_NAME}
   
+  # Example: values
+  # ${NAME} = guysoft/custompios
+  # ${RELEASE_TAG} = 1.2.3
+  
+  generate_manifest "${NAME}" "${RELEASE_TAG}"
   
   if docker_tag_exists ${NAME} ${RELEASE_TAG}-amd64 ;then
     if docker_tag_exists ${NAME} ${RELEASE_TAG}-arm32v7;then
       echo "Pushing multi-arch manifest"
       ./manifest-tool push from-spec manifest-generated.yaml
     else
-      echo "arm32v7 image is missing, not pushing manifst"
+      echo "arm32v7 image is missing, not pushing manifest"
     fi
     
   else
-    echo "amd64 image is missing, not pushing manifst"
+    echo "amd64 image is missing, not pushing manifest"
   fi
 
 fi
